@@ -1,0 +1,17 @@
+{
+  "name": "volleyball-carpool",
+  "account_id": "5544a6229ba442f111f89ddb5d76c634",
+  "main": "worker.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "volleyball-carpool-db",
+      "database_id": "a2843181-d26a-42df-aef1-9e39349c66c4",
+      "migrations_dir": "drizzle"
+    }
+  ]
+}
