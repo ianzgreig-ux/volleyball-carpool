@@ -1,7 +1,21 @@
 import {syncFeed} from '../../../lib/feed';
-import {getDb} from "../../../db";import {families,assignments,changes} from "../../../db/schema";import {env} from "cloudflare:workers";import {eq} from "drizzle-orm";
-export async function GET(){const db=getDb();return Response.json({...await syncFeed(),families:await db.select().from(families),assignments:await db.select().from(assignments),changes:await db.select().from(changes)});}
-export async function POST(req:Request){const x=await req.json(),db=getDb();if(x.type==='families'){if(!Array.isArray(x.families)||x.families.length!==4||x.families.some((f:any,i:number)=>f.id!==i+1||typeof f.child!=='string'||!f.child.trim()||f.child.trim().length>50||typeof f.parent!=='string'||f.parent.length>80))return Response.json({error:'Enter four child names (up to 50 characters).'}, {status:400});const names=x.families.map((f:any)=>f.child.trim().toLowerCase());if(new Set(names).size!==4)return Response.json({error:'Use a different name for each child.'},{status:400});await db.batch(x.families.map((f:any)=>db.insert(families).values({id:f.id,child:f.child.trim(),parent:f.parent.trim()}).onConflictDoUpdate({target:families.id,set:{child:f.child.trim(),parent:f.parent.trim()}})) as any);return Response.json({ok:true});}
+import {getDb} from "../../../db";import {families,assignments,changes,absences} from "../../../db/schema";import {env} from "cloudflare:workers";import {eq} from "drizzle-orm";
+export async function GET(){const db=getDb();return Response.json({...await syncFeed(),families:await db.select().from(families),assignments:await db.select().from(assignments),changes:await db.select().from(changes),absences:await db.select().from(absences)});}
+export async function POST(req:Request){const x:any=await req.json(),db=getDb();if(x.type==='families'){if(!Array.isArray(x.families)||x.families.length!==4||x.families.some((f:any,i:number)=>f.id!==i+1||typeof f.child!=='string'||!f.child.trim()||f.child.trim().length>50||typeof f.parent!=='string'||f.parent.length>80))return Response.json({error:'Enter four child names (up to 50 characters).'}, {status:400});const names=x.families.map((f:any)=>f.child.trim().toLowerCase());if(new Set(names).size!==4)return Response.json({error:'Use a different name for each child.'},{status:400});await db.batch(x.families.map((f:any)=>db.insert(families).values({id:f.id,child:f.child.trim(),parent:f.parent.trim()}).onConflictDoUpdate({target:families.id,set:{child:f.child.trim(),parent:f.parent.trim()}})) as any);return Response.json({ok:true});}
+if(x.type==='attendance'){
+if(typeof x.date!=='string'||x.date.length>100||!Number.isInteger(x.family)||x.family<1||x.family>4||typeof x.absent!=='boolean')return Response.json({error:'Invalid attendance'},{status:400});
+const practice=await env.DB.prepare("SELECT id FROM practices WHERE key=? AND status='active'").bind(x.date).first();
+if(!practice)return Response.json({error:'Practice is unavailable. Refresh the schedule.'},{status:400});
+const family=await db.select().from(families).where(eq(families.id,x.family));
+if(!family.length)return Response.json({error:'Save player names first.'},{status:400});
+const id=x.date+':'+x.family,sql=env.DB;
+const log=sql.prepare(`INSERT INTO changes (id,date,direction,previous,next,changed_at)
+SELECT ?,?,'attendance',
+(SELECT child FROM families WHERE id=?) || CASE WHEN EXISTS(SELECT 1 FROM absences WHERE id=?) THEN ': Not attending' ELSE ': Attending' END,
+(SELECT child FROM families WHERE id=?) || ?,?
+WHERE EXISTS(SELECT 1 FROM absences WHERE id=?)<>?`).bind(crypto.randomUUID(),x.date,x.family,id,x.family,x.absent?': Not attending':': Attending',new Date().toISOString(),id,Number(x.absent));
+const mutation=x.absent?sql.prepare('INSERT INTO absences (id,date,family) VALUES (?,?,?) ON CONFLICT(id) DO NOTHING').bind(id,x.date,x.family):sql.prepare('DELETE FROM absences WHERE id=?').bind(id);
+await sql.batch([log,mutation]);return Response.json({ok:true});}
 if(typeof x.date!=='string'||x.date.length>100||!['there','back'].includes(x.direction)||!Number.isInteger(x.family)||x.family<0||x.family>4)return Response.json({error:'Invalid assignment'},{status:400});const practice=await env.DB.prepare("SELECT id FROM practices WHERE key=? AND status='active'").bind(x.date).first();if(!practice)return Response.json({error:'Practice is unavailable. Refresh the schedule.'},{status:400});const id=x.date+':'+x.direction;
 if(x.family){const f=await db.select().from(families).where(eq(families.id,x.family));if(!f.length)return Response.json({error:'Save child names first.'},{status:400});}
 const sql=env.DB;
