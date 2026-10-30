@@ -7,3 +7,5 @@ export const practices=sqliteTable("practices",{id:text("id").primaryKey(),key:t
 export const feedState=sqliteTable("feed_state",{id:integer("id").primaryKey(),syncedAt:text("synced_at").notNull()});
 export const absences=sqliteTable("absences",{id:text("id").primaryKey(),date:text("date").notNull(),family:integer("family").notNull()});
 export const rideUpdates=sqliteTable('ride_updates',{date:text('date').notNull(),direction:text('direction').notNull(),family:integer('family').notNull(),pickupTime:text('pickup_time').notNull().default(''),pickupLocation:text('pickup_location').notNull().default(''),note:text('note').notNull().default(''),status:text('status').notNull().default('scheduled'),etaMinutes:integer('eta_minutes'),statusAt:text('status_at'),updatedAt:text('updated_at').notNull()},table=>[primaryKey({columns:[table.date,table.direction]})]);
+
+export const pickupOrders=sqliteTable('pickup_orders',{date:text('date').notNull(),direction:text('direction').notNull(),orderJson:text('order_json').notNull().default('[]')},t=>[primaryKey({columns:[t.date,t.direction]})]);

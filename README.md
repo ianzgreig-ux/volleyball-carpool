@@ -14,3 +14,6 @@ Player attendance: each practice has four attendance checkboxes. Uncheck a playe
 Trip updates (v1.7.0): pickup time, meeting place and note are saved per practice and direction. Live statuses are available on the practice day, with 5/10/15-minute pickup estimates. Changing the assigned driver resets status and ETA while retaining the pickup plan. The app remains shared-link access, with no driver identity verification. Native sharing opens a chooser; the parent selects their existing group and sends. Clipboard fallback does not send messages. No live location or automatic SMS is used.
 
 Migration 0005 adds ride_updates. Startup also creates this table idempotently so existing Cloudflare deploy commands remain compatible; it does not alter existing assignments. Run `npm test` for SQLite-backed journey validation, persistence and reassignment checks.
+
+### v1.7.1
+Pickup details are replaced with an ordered list of attending children, excluding the driver’s own child, and an estimated five minutes between stops. The order can be edited before practice and is included in shared messages. Future practices show the order without disabled live-status controls. The additive pickup_orders table is initialised automatically and in migration 0006. Previous pickup details are retained in storage but no longer used in messages or calendar exports.

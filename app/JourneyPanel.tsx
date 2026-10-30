@@ -1,32 +1,36 @@
 "use client";
 import {useEffect,useRef,useState} from 'react';
-import {chicagoDate,clockTime,etaText,journeyLabel,journeyMessage} from '../lib/journey';
+import {chicagoDate,etaText,journeyLabel,journeyMessage,orderedRiders} from '../lib/journey';
 import type {JourneyDirection,JourneyFamily,JourneyPractice,JourneyStatus,JourneyUpdate} from '../lib/journey';
 
-export function JourneySummary({update,direction}:{update?:JourneyUpdate;direction:JourneyDirection}) {
+export function JourneySummary({update,direction,riders=[],driverId=0}:{update?:JourneyUpdate;direction:JourneyDirection;riders?:JourneyFamily[];driverId?:number}) {
+  const ordered=direction==='there'?orderedRiders(riders,driverId,update?.pickupOrder):[];
   return <div className="journey-summary">
-    {update?.pickupTime&&<p><strong>{direction==='there'?'Home pickup':'Pickup'}: {clockTime(update.pickupTime)}</strong></p>}
-    {update?.pickupLocation&&<p>{update.pickupLocation}</p>}
-    {update?.note&&<p>{update.note}</p>}
+    {ordered.length>0&&<p>Collect: {ordered.map(r=>r.child).join(' → ')}<small>About 5 min between kids</small></p>}
     {update&&update.status!=='scheduled'&&<p className={'journey-status '+update.status}><strong>{journeyLabel(update.status,direction)}</strong>{update.status==='on_my_way'&&<span>{etaText(update)}</span>}<small>Updated {new Date(update.statusAt!).toLocaleTimeString('en-US',{timeZone:'America/Chicago',hour:'numeric',minute:'2-digit'})} Chicago time</small></p>}
   </div>;
 }
 
-type Props={practice:JourneyPractice;direction:JourneyDirection;family:JourneyFamily;update?:JourneyUpdate;available:boolean;onSave:(body:unknown)=>Promise<unknown>;onClose:()=>void};
-export default function JourneyPanel({practice,direction,family,update,available,onSave,onClose}:Props) {
+type Props={practice:JourneyPractice;direction:JourneyDirection;family:JourneyFamily;riders:JourneyFamily[];update?:JourneyUpdate;available:boolean;onSave:(body:unknown)=>Promise<unknown>;onClose:()=>void};
+export default function JourneyPanel({practice,direction,family,riders,update,available,onSave,onClose}:Props) {
   const dialog=useRef<HTMLDialogElement>(null);
-  const [pickupTime,setPickupTime]=useState(update?.pickupTime||''),[pickupLocation,setPickupLocation]=useState(update?.pickupLocation||''),[note,setNote]=useState(update?.note||'');
-  const [eta,setEta]=useState(10),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
+  const [draftOrder,setDraftOrder]=useState<number[]|null>(null);
+  const [eta,setEta]=useState(5),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const originalFamily=useRef(family.id);
   const driverChanged=family.id!==originalFamily.current;
   const canEdit=available&&!driverChanged&&practice.status==='active'&&practice.date>=chicagoDate();
   const live=canEdit&&practice.date===chicagoDate();
+  const savedOrder=orderedRiders(riders,family.id,update?.pickupOrder);
+  const order=orderedRiders(riders,family.id,draftOrder||update?.pickupOrder);
+  const dirty=direction==='there'&&order.map(r=>r.id).join(',')!==savedOrder.map(r=>r.id).join(',');
   useEffect(()=>{const previous=document.activeElement as HTMLElement|null;dialog.current?.showModal();return()=>{previous?.focus();}},[]);
-  const message=journeyMessage(practice,direction,family,update);
+  const message=journeyMessage(practice,direction,family,update,Date.now(),riders);
   async function save(body:Record<string,unknown>,success:string) {
     setBusy(true);setError('');setNotice('');
-    try{await onSave({...body,date:practice.key,direction,family:originalFamily.current});setNotice(success);}catch(e){setError(e instanceof Error?e.message:'Could not save this trip update.');}finally{setBusy(false);}
+    try{await onSave({...body,date:practice.key,direction,family:originalFamily.current});setNotice(success);return true;}catch(e){setError(e instanceof Error?e.message:'Could not save this trip update.');return false;}finally{setBusy(false);}
   }
+  async function saveOrder(){if(await save({type:'journey_order',pickupOrder:order.map(r=>r.id)},'Order saved.'))setDraftOrder(null);}
+  function move(index:number,step:number){const ids=order.map(r=>r.id);[ids[index],ids[index+step]]=[ids[index+step],ids[index]];setDraftOrder(ids);setNotice('');}
   function status(value:JourneyStatus){return save({type:'journey_status',status:value,etaMinutes:value==='on_my_way'?eta:null},'Status saved. Share a text to alert the group.');}
   async function share(){
     setError('');setNotice('');
@@ -38,28 +42,26 @@ export default function JourneyPanel({practice,direction,family,update,available
     <div className="eyebrow">{new Date(practice.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
     <h2 id="journey-title">{direction==='there'?'Taking the kids to practice':'Bringing the kids home'}</h2>
     <p className="journey-driver">Driver: <strong>{family.parent||family.child+'’s parent'}</strong></p>
-    <p className="journey-help">Only update the status if you’re driving this trip. Updates are shared with all families.</p>
     {driverChanged&&<p className="error" role="alert">The driver has changed. Close this panel and check the new assignment.</p>}
     {!available&&<p className="error">No ride is currently needed for this trip.</p>}
-    <section className="journey-live" aria-labelledby="trip-status-heading">
+    {direction==='there'&&<section className="journey-plan" aria-labelledby="pickup-order-heading">
+      <h3 id="pickup-order-heading">Who’s first?</h3>
+      <p className="journey-help">Use the arrows to change the order. Allow about 5 minutes between kids.</p>
+      <ol className="pickup-order">{order.map((r,i)=><li key={r.id}><span className="pickup-number">{i+1}</span><div><strong>{r.child}</strong><small>{i?`About ${i*5} min after first pickup`:'First pickup'}</small></div><button type="button" aria-label={'Move '+r.child+' earlier'} disabled={busy||!canEdit||i===0} onClick={()=>move(i,-1)}>↑</button><button type="button" aria-label={'Move '+r.child+' later'} disabled={busy||!canEdit||i===order.length-1} onClick={()=>move(i,1)}>↓</button></li>)}</ol>
+      {!order.length&&<p className="journey-help">No other kids to collect.</p>}
+      {riders.some(r=>r.id===family.id)&&<p className="journey-help">{family.child} is already with the driver.</p>}
+      {dirty&&<button className="journey-primary" disabled={busy||!canEdit} type="button" onClick={saveOrder}>{busy?'Saving…':'Save order'}</button>}
+    </section>}
+    {live&&<section className="journey-live" aria-labelledby="trip-status-heading">
       <h3 id="trip-status-heading">Trip status</h3>
-      <JourneySummary update={update?{...update,pickupTime:'',pickupLocation:'',note:''}:undefined} direction={direction}/>
-      {(!update||update.status==='scheduled')&&<p className="journey-help">Scheduled</p>}
-      <fieldset disabled={busy||!live} className="eta-options"><legend>How long until pickup?</legend>{[5,10,15].map(minutes=><label key={minutes}><input type="radio" name="eta" checked={eta===minutes} onChange={()=>setEta(minutes)}/>{minutes} min</label>)}</fieldset>
-      <div className="journey-actions"><button className="journey-primary" type="button" disabled={busy||!live} onClick={()=>status('on_my_way')}>{update?.status==='on_my_way'?'Update arrival estimate':'On my way'}</button><button type="button" disabled={busy||!live||update?.status==='arrived'} onClick={()=>status('arrived')}>Arrived at pickup</button><button type="button" disabled={busy||!live||update?.status==='completed'} onClick={()=>status('completed')}>{direction==='there'?'Dropped off at practice':'Dropped off at home'}</button></div>
-      {update&&update.status!=='scheduled'&&<button type="button" className="journey-reset" disabled={busy||!live} onClick={()=>status('scheduled')}>Reset to scheduled</button>}
-      {!live&&canEdit&&<p className="journey-help">Live status buttons are available on the practice day. You can save pickup details now.</p>}
-    </section>
+      <JourneySummary update={update} direction={direction}/>
+      <fieldset disabled={busy||dirty} className="eta-options"><legend>{direction==='there'?'Time to first child':'Time to practice pickup'}</legend>{[5,10,15].map(minutes=><label key={minutes}><input type="radio" name="eta" checked={eta===minutes} onChange={()=>setEta(minutes)}/>{minutes} min</label>)}</fieldset>
+      <div className="journey-actions"><button className="journey-primary" type="button" disabled={busy||dirty} onClick={()=>status('on_my_way')}>{update?.status==='on_my_way'?'Update arrival estimate':'On my way'}</button><button type="button" disabled={busy||dirty||update?.status==='arrived'} onClick={()=>status('arrived')}>Arrived at pickup</button><button type="button" disabled={busy||dirty||update?.status==='completed'} onClick={()=>status('completed')}>{direction==='there'?'Dropped off at practice':'Dropped off at home'}</button></div>
+      {update&&update.status!=='scheduled'&&<button type="button" className="journey-reset" disabled={busy||dirty} onClick={()=>status('scheduled')}>Reset to scheduled</button>}
+    </section>}
+    {!live&&canEdit&&<p className="journey-help">“On my way” will be available on the practice day.</p>}
+    {dirty&&<p className="journey-help">Save the order before updating your status or sharing.</p>}
     {error&&<p className="error" role="alert">{error}</p>}{notice&&<p className="journey-notice" role="status">{notice}</p>}
-    <section className="journey-share" aria-labelledby="trip-message-heading"><h3 id="trip-message-heading">Message the group</h3><p className="journey-help">Uses the saved trip details. Choose your existing group in your phone’s share menu, then send. Nothing is sent automatically.</p><button className="journey-primary" type="button" disabled={busy||!canEdit} onClick={share}>Share / text the group</button><details className="message-preview"><summary>Preview message</summary><textarea aria-label="Prepared group text" readOnly value={message} rows={5}/></details></section>
-    <form className="journey-plan" onSubmit={e=>{e.preventDefault();const fields=new FormData(e.currentTarget);void save({type:'journey_details',pickupTime:String(fields.get('pickupTime')||''),pickupLocation:String(fields.get('pickupLocation')||''),note:String(fields.get('note')||'')},'Pickup details saved.');}}>
-      <h3>Pickup plan</h3>
-      <p className="journey-help">Practice {direction==='there'?'starts':'finishes'} at {clockTime((direction==='there'?practice.start:practice.end).slice(11,16))}. All times are Chicago time.</p>
-      <label>{direction==='there'?'Collect kids from home at':'Collect kids from practice at'}<input type="time" name="pickupTime" value={pickupTime} onInput={e=>setPickupTime(e.currentTarget.value)} disabled={busy||!canEdit} max={direction==='there'?practice.start.slice(11,16):undefined} min={direction==='back'?practice.end.slice(11,16):undefined} onChange={e=>setPickupTime(e.target.value)}/></label>
-      <label>Meeting place<input name="pickupLocation" value={pickupLocation} disabled={busy||!canEdit} maxLength={160} placeholder={direction==='there'?'e.g. Front entrance':'e.g. Outside the gym'} onChange={e=>setPickupLocation(e.target.value)}/></label>
-      <label>Pickup note<textarea name="note" value={note} disabled={busy||!canEdit} maxLength={300} rows={2} placeholder="e.g. Meet downstairs. Picking up Eve first." onChange={e=>setNote(e.target.value)}/></label>
-      <button className="journey-primary" disabled={busy||!canEdit} type="submit">{busy?'Saving…':'Save pickup details'}</button>
-    </form>
-
+    <section className="journey-share" aria-labelledby="trip-message-heading"><h3 id="trip-message-heading">Message the group</h3><p className="journey-help">Choose your group and tap Send in your messaging app.</p><button className="journey-primary" type="button" disabled={busy||!canEdit||dirty} onClick={share}>Share / text the group</button><details className="message-preview"><summary>Preview message</summary><textarea aria-label="Prepared group text" readOnly value={message} rows={5}/></details></section>
   </dialog>;
 }

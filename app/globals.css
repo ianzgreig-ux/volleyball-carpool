@@ -72,3 +72,9 @@ header{height:60px}
 @media(max-width:640px){.journey-dialog{padding:20px}.journey-dialog h2{font-size:22px}.journey-actions button{flex:1 1 140px}.eta-options{gap:4px}.eta-options label{padding:5px}.journey-open{font-size:11px}}
 
 .message-preview{margin-top:12px;font-size:12px;color:#56705b}.message-preview summary{cursor:pointer;padding:5px 0}.message-preview textarea{margin-top:8px}
+.pickup-order{list-style:none;padding:0;margin:12px 0;display:grid;gap:8px}
+.pickup-order li{display:flex;align-items:center;gap:8px;padding:10px;background:#eaf0df;border-radius:8px}
+.pickup-order li>div{flex:1;min-width:0;overflow-wrap:anywhere}
+.pickup-order strong{font-size:14px}.pickup-order small,.journey-summary>p>small{display:block;font-size:11px;color:#607365;margin-top:3px}
+.pickup-number{font-size:12px;color:#607365;min-width:14px}
+.pickup-order button{width:40px;min-height:44px;border:1px solid #c4d1bc;border-radius:6px;background:white;color:#153d35;font-size:18px;flex-shrink:0}
