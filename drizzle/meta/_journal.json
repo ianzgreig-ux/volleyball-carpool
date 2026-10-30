@@ -36,6 +36,13 @@
       "when": 1792536422993,
       "tag": "0004_dashing_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1793385364341,
+      "tag": "0005_ride_updates",
+      "breakpoints": true
     }
   ]
 }

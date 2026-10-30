@@ -41,3 +41,34 @@ header{height:60px}
 .page-tabs button:focus-visible{outline:2px solid #476a40;outline-offset:-2px;border-radius:4px}
 #counts-panel .stats{margin-top:0}
 [role="tabpanel"][hidden]{display:none}
+
+.journey-summary{font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.journey-summary p{margin:8px 0 0}
+.journey-summary .journey-status{border-left:3px solid #6b894d;padding-left:9px}
+.journey-summary .journey-status span,.journey-summary .journey-status small{display:block;margin-top:3px;font-size:11px}
+.journey-open{border:1px solid #c6d3bc;border-radius:7px;background:#fff;color:#214d3b;padding:9px 10px;margin-top:10px;font-size:12px;min-height:42px;text-align:left;width:100%}
+.journey-open:hover{background:#dce5b6}
+.journey-dialog{border:1px solid #ced8c7;border-radius:16px;background:#f6f5f0;color:#153d35;width:min(540px,calc(100% - 24px));max-height:90vh;max-height:90dvh;padding:26px;overflow:auto}
+.journey-dialog::backdrop{background:#102e29aa}
+.journey-dialog .close{position:absolute;top:8px;right:12px;min-width:36px;min-height:36px}
+.journey-dialog h2{font-size:24px;margin:12px 16px 12px 0;line-height:1.2}
+.journey-dialog h3{font-size:17px;margin:0 0 10px}
+.journey-driver{font-size:14px;margin:8px 0}
+.journey-help{font-size:12px;color:#607365;line-height:1.5;margin:8px 0 12px}
+.journey-live,.journey-plan,.journey-share{border-top:1px solid #d6ded6;padding-top:18px;margin-top:18px}
+.journey-plan label{margin:12px 0;font-size:12px}
+.journey-plan input,.journey-dialog textarea{width:100%;min-width:0}
+.journey-dialog textarea{padding:12px;border:1px solid #cdd7cd;border-radius:7px;background:white;color:#153d35;font:13px/1.5 Arial,sans-serif;resize:vertical}
+.eta-options{display:flex;gap:10px;padding:10px;margin:14px 0;min-width:0}
+.eta-options label{display:flex;align-items:center;flex-direction:row;gap:7px;padding:6px;font-size:13px;color:#214d3b;cursor:pointer}
+.eta-options input{accent-color:#153d35;width:18px;height:18px;margin:0}
+.journey-actions{display:flex;flex-wrap:wrap;gap:8px}
+.journey-actions button,.journey-primary{border:1px solid #c4d1bc;border-radius:7px;padding:11px 13px;min-height:44px;font-size:13px;background:#fff;color:#214d3b}
+.journey-actions .journey-primary,.journey-primary{background:#153d35;color:#fff;border-color:#153d35}
+.journey-reset{border:0;background:transparent;text-decoration:underline;text-underline-offset:3px;font-size:12px;color:#607365;min-height:38px;padding:8px 0}
+.journey-notice{padding:10px;background:#e6edd7;border-radius:7px;color:#345741;font-size:13px;line-height:1.5}
+.journey-share>.journey-primary{margin-top:10px;width:100%}
+.journey-dialog button:focus-visible,.journey-open:focus-visible{outline:3px solid #97b466;outline-offset:2px}
+@media(max-width:640px){.journey-dialog{padding:20px}.journey-dialog h2{font-size:22px}.journey-actions button{flex:1 1 140px}.eta-options{gap:4px}.eta-options label{padding:5px}.journey-open{font-size:11px}}
+
+.message-preview{margin-top:12px;font-size:12px;color:#56705b}.message-preview summary{cursor:pointer;padding:5px 0}.message-preview textarea{margin-top:8px}
