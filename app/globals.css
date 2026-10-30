@@ -12,3 +12,24 @@
 .familychips>button{padding:10px 15px;background:#e9eddf;border:1px solid transparent;border-radius:8px;font-size:12px;color:#345741;text-align:left}.familychips>button small{display:block;margin-top:4px;color:inherit}.familychips>button.familyactive{background:#153d35;color:white;border-color:#153d35}.familychips>button:focus-visible{outline:3px solid #97b466;outline-offset:2px}.filterstatus{font-size:13px;color:#345741;background:#e9eddf;padding:12px;border-radius:7px}.legs>div.myjourney{background:#edf3dc;border-left:3px solid #6a8a45;padding-left:10px;padding-right:8px}
 
 .attendance{margin:0 0 16px;padding:12px;min-width:0}.attendance legend{font-weight:bold;color:#214d3b}.attendance>p{font-size:11px;line-height:1.5;margin:0 0 10px;color:#6b7c71}.attendance label{flex-direction:row;align-items:center;gap:10px;padding:10px 0;min-height:44px;cursor:pointer;border-top:1px solid #edf0ea}.attendance input{width:20px;height:20px;margin:0;accent-color:#153d35;flex-shrink:0}.attendance label span{min-width:0;overflow-wrap:anywhere}.attendance label b{color:#214d3b;font-size:12px}.attendance small{display:block;margin-top:4px;font-size:10px}.attendance label.absent b{color:#748578}.attendance .norides{background:#edf3dc;padding:10px;border-radius:6px;margin:8px 0 0;color:#214d3b}
+
+/* Keep the next journey visible before filters and season totals. */
+header{height:60px}
+.compact-intro{padding:20px 0 16px}
+.compact-intro h1{font-size:28px;letter-spacing:-.8px;line-height:1.2;margin:0 0 6px}
+.compact-intro p{margin:0;font-size:13px;color:#6b7c71;line-height:1.5}
+.next-carpool{background:#fff;border:1px solid #cdd9c7;border-top:4px solid #153d35;border-radius:12px;padding:20px}
+.next-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.next-heading h2{font-size:20px}
+.next-heading a{color:#345741;font-size:12px;line-height:1.5;text-underline-offset:3px}
+.next-details{display:flex;flex-wrap:wrap;gap:8px 20px;margin:14px 0;font-size:14px;line-height:1.5}
+.next-details a{color:#56705b;overflow-wrap:anywhere}
+.next-legs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.next-legs>div{background:#f0f4e7;border-radius:8px;padding:12px;min-width:0;overflow-wrap:anywhere}
+.next-legs span,.next-legs small{display:block;font-size:12px;color:#56705b;line-height:1.5}
+.next-legs b{display:block;font-size:18px;margin-top:5px}
+.next-attending{font-size:12px;line-height:1.5;color:#56705b;margin:12px 0 0}
+.next-warning{font-size:12px;line-height:1.5;color:#96552c;margin:10px 0 0}
+#practice-board{scroll-margin-top:16px}
+.stats{margin:28px 0 20px}
+@media(max-width:640px){header{height:54px}.compact-intro{padding:16px 0 12px}.compact-intro h1{font-size:24px}.next-carpool{padding:16px}.next-heading h2{font-size:18px}.next-heading a{font-size:11px}.next-details{font-size:13px;margin:12px 0;gap:5px}.next-legs{gap:8px}.next-legs>div{padding:10px}.next-legs b{font-size:16px}}
